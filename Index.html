@@ -4,378 +4,342 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ระบบยืม–คืนอุปกรณ์ | โรงเรียนโซ่พิสัยพิทยาคม</title>
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+
+  <!-- Auto-redirect to GAS app after 3s — change URL below -->
+  <meta http-equiv="refresh" content="4; url=https://script.google.com/macros/s/AKfycbyowVlKllf9Fd12633qDsGFgZQlCfjlQYGb4UzLhw1wFgOhdneBxVKq7ahLw_6sGD7p/exec">
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=Prompt:wght@400;600;700&display=swap" rel="stylesheet">
-  <?!= include("CSS"); ?>
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=Prompt:wght@600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --primary: #1565C0;
+      --primary-light: #42A5F5;
+      --accent: #00BCD4;
+      --glass: rgba(255,255,255,0.75);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Sarabun', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 40%, #E1F5FE 70%, #EDE7F6 100%);
+      position: relative;
+      overflow: hidden;
+      padding: 24px;
+    }
+
+    /* Animated blobs */
+    body::before, body::after {
+      content: '';
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(60px);
+      opacity: 0.35;
+      animation: float 8s ease-in-out infinite;
+    }
+    body::before {
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, #42A5F5, #1565C0);
+      top: -150px; left: -150px;
+    }
+    body::after {
+      width: 400px; height: 400px;
+      background: radial-gradient(circle, #00BCD4, #0288D1);
+      bottom: -100px; right: -100px;
+      animation-delay: -4s;
+    }
+    @keyframes float {
+      0%,100% { transform: translateY(0) scale(1); }
+      50%      { transform: translateY(30px) scale(1.05); }
+    }
+
+    /* Card */
+    .card {
+      background: var(--glass);
+      backdrop-filter: blur(24px) saturate(180%);
+      -webkit-backdrop-filter: blur(24px) saturate(180%);
+      border: 1.5px solid rgba(255,255,255,0.6);
+      border-radius: 32px;
+      box-shadow: 0 20px 60px rgba(21,101,192,0.18);
+      padding: 48px 44px 40px;
+      text-align: center;
+      max-width: 520px;
+      width: 100%;
+      position: relative;
+      z-index: 1;
+      animation: slideUp 0.6s cubic-bezier(.4,0,.2,1);
+    }
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Logo */
+    .logo {
+      width: 90px; height: 90px;
+      object-fit: contain;
+      filter: drop-shadow(0 4px 16px rgba(21,101,192,0.3));
+      margin-bottom: 20px;
+    }
+
+    /* Titles */
+    .school-name {
+      font-family: 'Prompt', sans-serif;
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--primary);
+      line-height: 1.3;
+      margin-bottom: 6px;
+    }
+    .system-name {
+      font-size: 1rem;
+      color: #5577aa;
+      font-weight: 500;
+      margin-bottom: 32px;
+    }
+
+    /* Divider */
+    .divider {
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--primary-light), transparent);
+      border-radius: 2px;
+      margin-bottom: 28px;
+    }
+
+    /* Info box */
+    .info-box {
+      background: rgba(227,242,253,0.6);
+      border: 1.5px solid rgba(66,165,245,0.25);
+      border-radius: 16px;
+      padding: 16px 20px;
+      margin-bottom: 28px;
+      font-size: 0.9rem;
+      color: #3a5080;
+      line-height: 1.7;
+    }
+    .info-box strong { color: var(--primary); }
+
+    /* Countdown */
+    .countdown-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 22px;
+      font-size: 0.88rem;
+      color: #5577aa;
+    }
+    .countdown-num {
+      font-family: 'Prompt', sans-serif;
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--primary);
+      background: rgba(21,101,192,0.08);
+      width: 46px; height: 46px;
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    /* Progress bar */
+    .progress-bar {
+      height: 5px;
+      background: rgba(187,222,251,0.5);
+      border-radius: 3px;
+      margin-bottom: 24px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary), var(--accent));
+      border-radius: 3px;
+      animation: countdown 4s linear forwards;
+    }
+    @keyframes countdown {
+      from { width: 100%; }
+      to   { width: 0%; }
+    }
+
+    /* Buttons */
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      padding: 15px 28px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      color: white;
+      font-family: 'Prompt', sans-serif;
+      font-size: 1rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      text-decoration: none;
+      box-shadow: 0 8px 24px rgba(21,101,192,0.35);
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.2s, box-shadow 0.2s;
+      margin-bottom: 12px;
+    }
+    .btn-primary::after {
+      content: '';
+      position: absolute; top: 50%; left: -60%;
+      width: 40%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+      transform: translateY(-50%) skewX(-20deg);
+      animation: shimmer 2.5s infinite;
+    }
+    @keyframes shimmer { to { left: 130%; } }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 30px rgba(21,101,192,0.42); }
+
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      padding: 12px 24px;
+      background: white;
+      color: var(--primary);
+      font-family: 'Sarabun', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 600;
+      border: 2px solid rgba(66,165,245,0.4);
+      border-radius: 50px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .btn-secondary:hover { background: var(--primary); color: white; border-color: var(--primary); }
+
+    /* Feature pills */
+    .features {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      margin-bottom: 28px;
+    }
+    .pill {
+      background: rgba(21,101,192,0.08);
+      color: var(--primary);
+      padding: 4px 12px;
+      border-radius: 50px;
+      font-size: 0.76rem;
+      font-weight: 600;
+    }
+
+    /* Footer note */
+    .note {
+      margin-top: 20px;
+      font-size: 0.75rem;
+      color: #90a4c0;
+      line-height: 1.6;
+    }
+
+    /* Footer */
+    footer {
+      margin-top: 28px;
+      font-size: 0.73rem;
+      color: rgba(85,119,170,0.7);
+      text-align: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    @media (max-width: 540px) {
+      .card { padding: 32px 24px 28px; }
+      .school-name { font-size: 1.1rem; }
+    }
+  </style>
 </head>
 <body>
 
-<!-- Loader -->
-<div id="loaderOverlay" class="loader-overlay">
-  <div class="loader-spinner"></div>
-  <div id="loaderText" class="loader-text">กำลังโหลด...</div>
-</div>
+<div class="card">
+  <img class="logo"
+       src="https://i.ibb.co/fVFc00vF/SPK-3-D-PNG-Remove-bg-removebg-preview.png"
+       alt="โรงเรียนโซ่พิสัยพิทยาคม"
+       onerror="this.style.display='none'">
 
-<!-- Print Area -->
-<div id="printArea"></div>
+  <div class="school-name">โรงเรียนโซ่พิสัยพิทยาคม</div>
+  <div class="system-name">ระบบยืม–คืนอุปกรณ์ออนไลน์ | กลุ่มงานบริหารงานทั่วไป</div>
 
-<!-- Hidden catalog image input -->
-<input id="catalogImageInput" type="file" accept="image/*" style="display:none">
+  <div class="divider"></div>
 
-<!-- ══ Header ══════════════════════════════════════ -->
-<header class="app-header">
-  <div class="header-brand">
-    <img class="header-logo"
-         src="https://i.ibb.co/fVFc00vF/SPK-3-D-PNG-Remove-bg-removebg-preview.png"
-         alt="Logo" onerror="this.style.display='none'">
-    <div>
-      <div class="header-title">ระบบยืม–คืนอุปกรณ์</div>
-      <div class="header-subtitle">โรงเรียนโซ่พิสัยพิทยาคม</div>
-    </div>
-  </div>
-  <nav class="nav-tabs">
-    <button id="tab-dashboard" class="nav-tab" onclick="showPage('dashboard')">📊 Dashboard</button>
-    <button id="tab-catalog"   class="nav-tab" onclick="showPage('catalog')">🖼️ แคตตาล็อก</button>
-    <button id="tab-borrow"    class="nav-tab" onclick="showPage('borrow')">📤 ยืม</button>
-    <button id="tab-return"    class="nav-tab" onclick="showPage('return')">📥 คืน</button>
-    <button id="tab-inventory" class="nav-tab" onclick="showPage('inventory')">📦 คลัง</button>
-    <button id="tab-history"   class="nav-tab" onclick="showPage('history')">📋 ประวัติ</button>
-  </nav>
-</header>
-
-<main class="app-main">
-
-<!-- ══════════════════════════════════════════════
-     DASHBOARD
-══════════════════════════════════════════════ -->
-<section id="page-dashboard" class="page">
-  <div class="stat-grid">
-    <div class="glass-card stat-card stat-blue">
-      <div class="stat-icon">📦</div>
-      <div><div class="stat-value" id="statTotal">–</div><div class="stat-label">พัสดุทั้งหมด (ชิ้น)</div></div>
-    </div>
-    <div class="glass-card stat-card stat-cyan">
-      <div class="stat-icon">✅</div>
-      <div><div class="stat-value" id="statRemaining">–</div><div class="stat-label">คงเหลือในคลัง</div></div>
-    </div>
-    <div class="glass-card stat-card stat-orange">
-      <div class="stat-icon">📤</div>
-      <div><div class="stat-value" id="statBorrowed">–</div><div class="stat-label">รายการกำลังยืม</div></div>
-    </div>
-    <div class="glass-card stat-card stat-green">
-      <div class="stat-icon">🗂️</div>
-      <div><div class="stat-value" id="statItems">–</div><div class="stat-label">ประเภทพัสดุ</div></div>
-    </div>
-    <div class="glass-card stat-card stat-purple">
-      <div class="stat-icon">🔢</div>
-      <div><div class="stat-value" id="statBorrowCount">–</div><div class="stat-label">ครั้งที่มายืมทั้งหมด</div></div>
-    </div>
+  <div class="features">
+    <span class="pill">📊 Dashboard Real-time</span>
+    <span class="pill">🖼️ แคตตาล็อกพัสดุ</span>
+    <span class="pill">✍️ ลายเซ็นดิจิทัล</span>
+    <span class="pill">🖨️ พิมพ์ทะเบียน</span>
+    <span class="pill">📤 ยืม–📥 คืน</span>
+    <span class="pill">📦 คลังพัสดุ</span>
   </div>
 
-  <div class="bento-grid">
-    <div class="glass-card chart-wrap">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-        <div class="section-title" style="margin:0">📈 Top 10 อุปกรณ์ที่ถูกยืมบ่อย</div>
-        <div class="rt-badge"><span class="rt-dot"></span>Real-time</div>
-      </div>
-      <div style="height:270px"><canvas id="borrowChart"></canvas></div>
-    </div>
-    <div class="glass-card overdue-wrap">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:11px">
-        <div class="section-title" style="margin:0">🔴 รายการค้างส่ง (&gt;7 วัน)</div>
-        <span id="dashTs" style="font-size:0.7rem;color:#aaa"></span>
-      </div>
-      <div id="overdueList"><div style="text-align:center;color:#bbb;padding:20px">กำลังโหลด...</div></div>
-    </div>
+  <div class="info-box">
+    ระบบนี้ทำงานบน <strong>Google Apps Script</strong><br>
+    กำลังนำทางไปยังระบบอัตโนมัติใน <strong id="secText">4</strong> วินาที…
   </div>
-</section>
 
-<!-- ══════════════════════════════════════════════
-     CATALOG
-══════════════════════════════════════════════ -->
-<section id="page-catalog" class="page">
-  <div class="glass-card form-section">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px">
-      <div class="form-title" style="margin:0">🖼️ แคตตาล็อกพัสดุ</div>
-      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        <div class="rt-badge"><span class="rt-dot"></span>คลิกการ์ดเพื่อดูรายละเอียด</div>
-        <button class="btn btn-outline btn-sm" onclick="loadCatalog()">🔄 รีเฟรช</button>
-      </div>
-    </div>
-
-    <!-- Search + Filter -->
-    <div class="search-bar">
-      <input id="catSearch" class="search-input" placeholder="🔍 ค้นหาชื่อพัสดุ..."
-             oninput="renderCatalog(stockData)">
-      <select id="catFilter"
-              style="border-radius:50px;padding:8px 14px;border:1.5px solid #BBDEFB;background:rgba(255,255,255,0.85);font-family:var(--font);font-size:0.84rem"
-              onchange="renderCatalog(stockData)">
-        <option value="">ทุกหมวดหมู่</option>
-      </select>
-      <button class="btn btn-primary btn-sm" onclick="showPage('inventory');openAddModal()">➕ เพิ่มพัสดุ</button>
-    </div>
-
-    <!-- Catalog Grid -->
-    <div id="catalogGrid" class="catalog-grid">
-      <div style="grid-column:1/-1;text-align:center;padding:40px;color:#bbb">กำลังโหลด...</div>
-    </div>
+  <!-- Countdown number -->
+  <div class="countdown-wrap">
+    <div class="countdown-num" id="countNum">4</div>
+    <span>วินาที กำลังไปที่ระบบ…</span>
   </div>
-</section>
 
-<!-- ══════════════════════════════════════════════
-     BORROW
-══════════════════════════════════════════════ -->
-<section id="page-borrow" class="page">
-  <div class="glass-card form-section">
-    <div class="form-title">📤 แบบฟอร์มยืมอุปกรณ์</div>
-    <div class="toggle-group">
-      <button class="toggle-btn active" data-type="นักเรียน" onclick="toggleBorrower('นักเรียน')">🧑‍🎓 นักเรียน</button>
-      <button class="toggle-btn" data-type="ครู/บุคลากร" onclick="toggleBorrower('ครู/บุคลากร')">👨‍🏫 ครู/บุคลากร</button>
-    </div>
-    <div class="form-grid">
-      <div class="form-group">
-        <label>ชื่อ–สกุลผู้ยืม *</label>
-        <input id="borrowerName" type="text" placeholder="ชื่อ นามสกุล">
-      </div>
-      <div id="studentFields" style="display:grid;grid-template-columns:1fr 1fr;gap:13px">
-        <div class="form-group">
-          <label>รหัสนักเรียน *</label>
-          <input id="studentId" type="text" placeholder="เช่น 30101">
-        </div>
-        <div class="form-group">
-          <label>ห้อง/ชั้น</label>
-          <input id="roomNo" type="text" placeholder="เช่น ม.3/2">
-        </div>
-      </div>
-      <div id="teacherFields" style="display:none;grid-template-columns:1fr 1fr;gap:13px">
-        <div class="form-group">
-          <label>ตำแหน่ง *</label>
-          <input id="teacherPos" type="text" placeholder="เช่น ครูชำนาญการพิเศษ">
-        </div>
-        <div class="form-group">
-          <label>กลุ่มสาระ/งาน</label>
-          <input id="teacherDept" type="text" placeholder="เช่น คณิตศาสตร์">
-        </div>
-      </div>
-    </div>
-
-    <div style="margin-top:18px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:9px">
-        <div class="form-title" style="font-size:0.91rem;margin:0">📋 รายการอุปกรณ์</div>
-        <button class="btn btn-outline btn-sm" onclick="addBorrowItem()">➕ เพิ่มรายการ</button>
-      </div>
-      <div id="borrowItems"></div>
-    </div>
-
-    <div style="margin-top:18px">
-      <label style="display:block;margin-bottom:6px;font-size:0.81rem;font-weight:600;color:#3a5080">📷 รูปภาพอุปกรณ์ (ไม่บังคับ)</label>
-      <div class="upload-area" onclick="triggerUpload()">
-        <div style="color:#888;font-size:0.86rem">📁 คลิกเพื่อเลือกรูปภาพ</div>
-        <input id="imageUpload" type="file" accept="image/*" style="display:none">
-        <img id="imgPreview" class="upload-preview" style="display:none" alt="preview">
-      </div>
-    </div>
-
-    <div style="margin-top:18px">
-      <label style="display:block;margin-bottom:6px;font-size:0.81rem;font-weight:600;color:#3a5080">✍️ ลายเซ็นผู้ยืม</label>
-      <div class="sig-wrap">
-        <canvas id="signatureCanvas" style="width:100%;height:148px;display:block"></canvas>
-      </div>
-      <div class="sig-actions">
-        <button class="btn btn-outline btn-sm" onclick="clearSignature()">🗑️ ล้างลายเซ็น</button>
-      </div>
-    </div>
-
-    <div style="margin-top:20px;display:flex;justify-content:flex-end;gap:9px">
-      <button class="btn btn-outline" onclick="resetBorrowForm()">↩️ รีเซ็ต</button>
-      <button class="btn btn-primary" onclick="submitBorrow()">💾 บันทึกการยืม</button>
-    </div>
+  <!-- Progress bar -->
+  <div class="progress-bar">
+    <div class="progress-fill"></div>
   </div>
-</section>
 
-<!-- ══════════════════════════════════════════════
-     RETURN
-══════════════════════════════════════════════ -->
-<section id="page-return" class="page">
-  <div class="glass-card form-section">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:9px">
-      <div class="form-title" style="margin:0">📥 รายการรอคืนอุปกรณ์</div>
-      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-        <div class="rt-badge"><span class="rt-dot"></span>อัปเดตอัตโนมัติ 20 วิ</div>
-        <button class="btn btn-outline btn-sm" onclick="loadReturnPage()">🔄 รีเฟรช</button>
-      </div>
-    </div>
-    <p style="font-size:0.82rem;color:#5577aa;background:rgba(227,242,253,0.6);padding:9px 13px;border-radius:11px;margin-bottom:14px">
-      ℹ️ ทุกคนสามารถดูรายการได้ — กดปุ่ม <strong>✅ คืน</strong> ต้องใส่รหัสผ่านผู้ดูแล
-    </p>
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>TransID</th><th>ประเภท</th><th>ผู้ยืม</th><th>อุปกรณ์</th>
-            <th>หมายเลขครุภัณฑ์</th><th>วันที่ยืม</th><th>ยืม</th><th>สถานะ</th>
-            <th>คืน / ดำเนินการ</th>
-          </tr>
-        </thead>
-        <tbody id="returnTableBody">
-          <tr><td colspan="9" style="text-align:center;color:#bbb;padding:24px">กำลังโหลด...</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-</section>
+  <!-- Buttons -->
+  <a class="btn-primary"
+     href="https://script.google.com/macros/s/AKfycbyowVlKllf9Fd12633qDsGFgZQlCfjlQYGb4UzLhw1wFgOhdneBxVKq7ahLw_6sGD7p/exec">
+    🚀 เข้าสู่ระบบเลย
+  </a>
 
-<!-- ══════════════════════════════════════════════
-     INVENTORY
-══════════════════════════════════════════════ -->
-<section id="page-inventory" class="page">
-  <div class="glass-card form-section">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:9px">
-      <div class="form-title" style="margin:0">📦 คลังพัสดุ</div>
-      <div style="display:flex;gap:7px">
-        <button class="btn btn-outline btn-sm" onclick="loadInventory()">🔄 รีเฟรช</button>
-        <button class="btn btn-primary btn-sm" onclick="openAddModal()">➕ เพิ่มพัสดุ</button>
-      </div>
-    </div>
-    <div class="search-bar">
-      <input id="invSearch" class="search-input" placeholder="🔍 ค้นหา..."
-             oninput="renderInventoryTable(stockData)">
-    </div>
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>รูป</th><th>ID</th><th>รายการ</th><th>หมายเลขครุภัณฑ์</th>
-            <th>หมวดหมู่</th><th>ทั้งหมด</th><th>คงเหลือ</th><th>หมายเหตุ</th><th>จัดการ</th>
-          </tr>
-        </thead>
-        <tbody id="invTableBody">
-          <tr><td colspan="9" style="text-align:center;padding:24px;color:#bbb">กำลังโหลด...</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-</section>
+  <a class="btn-secondary"
+     href="https://github.com/coprakphon/spk-borrow-system"
+     target="_blank" rel="noopener">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/>
+    </svg>
+    ดูซอร์สโค้ดบน GitHub
+  </a>
 
-<!-- ══════════════════════════════════════════════
-     HISTORY
-══════════════════════════════════════════════ -->
-<section id="page-history" class="page">
-  <div class="glass-card form-section">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:9px">
-      <div class="form-title" style="margin:0">📋 ประวัติการยืม–คืน</div>
-      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-        <span id="histRefreshBadge" style="font-size:0.74rem;color:#aaa"></span>
-        <div class="rt-badge"><span class="rt-dot"></span>25 วิ</div>
-        <button class="btn btn-outline btn-sm" onclick="loadHistory()">🔄</button>
-        <button class="btn btn-primary btn-sm" onclick="openPrintModalHistory()">🖨️ พิมพ์ทะเบียน</button>
-      </div>
-    </div>
-    <div class="search-bar">
-      <input id="histSearch" class="search-input" placeholder="🔍 ค้นหา TransID, ชื่อ..."
-             oninput="renderHistoryTable(txData)">
-      <select id="histFilter"
-              style="border-radius:50px;padding:8px 13px;border:1.5px solid #BBDEFB;background:rgba(255,255,255,0.85);font-family:var(--font);font-size:0.83rem"
-              onchange="renderHistoryTable(txData)">
-        <option value="">ทุกสถานะ</option>
-        <option value="ยืมอยู่">ยืมอยู่</option>
-        <option value="คืนบางส่วน">คืนบางส่วน</option>
-        <option value="คืนแล้ว">คืนแล้ว</option>
-      </select>
-    </div>
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>TransID</th><th>ประเภท</th><th>ชื่อผู้ยืม</th><th>รหัส/ห้อง</th>
-            <th>อุปกรณ์</th><th>ยืม</th><th>คืน</th><th>วันยืม</th>
-            <th>วันคืน</th><th>สถานะ</th><th>พิมพ์</th>
-          </tr>
-        </thead>
-        <tbody id="histTableBody">
-          <tr><td colspan="11" style="text-align:center;padding:24px;color:#bbb">กำลังโหลด...</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-</section>
-
-</main>
-
-<!-- ══ Modal: Add/Edit Stock ══════════════════════ -->
-<div id="itemModal" class="modal-overlay">
-  <div class="glass-card modal-box">
-    <div class="form-title" id="modalTitle">เพิ่ม/แก้ไขพัสดุ</div>
-    <input type="hidden" id="editId">
-    <div class="form-grid">
-      <div class="form-group full">
-        <label>ชื่อรายการ *</label>
-        <input id="editName" type="text" placeholder="เช่น โต๊ะประชุม">
-      </div>
-      <div class="form-group">
-        <label>หมายเลขครุภัณฑ์</label>
-        <input id="editAsset" type="text" placeholder="เช่น 6810-001-0001/65">
-      </div>
-      <div class="form-group">
-        <label>หมวดหมู่</label>
-        <input id="editCat" type="text" placeholder="เช่น เครื่องใช้สำนักงาน">
-      </div>
-      <div class="form-group">
-        <label>จำนวนทั้งหมด *</label>
-        <input id="editTotal" type="number" min="0" placeholder="0">
-      </div>
-      <div class="form-group" id="editRemGroup">
-        <label>คงเหลือ</label>
-        <input id="editRemaining" type="number" min="0" placeholder="0">
-      </div>
-      <div class="form-group full">
-        <label>หมายเหตุ</label>
-        <textarea id="editRemark" rows="2" placeholder="หมายเหตุเพิ่มเติม..."></textarea>
-      </div>
-      <!-- Image URL for catalog -->
-      <div class="form-group full">
-        <label>🖼️ URL รูปภาพพัสดุ (สำหรับแคตตาล็อก)</label>
-        <input id="editImageUrl" type="url" placeholder="https://... หรือ Google Drive URL"
-               oninput="onEditImageUrlChange()">
-        <img id="editImgPreview" style="display:none;max-height:100px;margin-top:8px;border-radius:10px;object-fit:contain" alt="preview"
-             onerror="this.style.display='none'">
-        <small style="color:#90CAF9;font-size:0.75rem">💡 หรืออัปโหลดรูปจากหน้าแคตตาล็อกโดยตรง (ปุ่ม 📷)</small>
-      </div>
-    </div>
-    <div style="display:flex;gap:9px;justify-content:flex-end;margin-top:14px">
-      <button class="btn btn-outline" onclick="closeModal()">ยกเลิก</button>
-      <button class="btn btn-primary" onclick="saveItem()">💾 บันทึก</button>
-    </div>
+  <div class="note">
+    ⓘ หน้านี้คือ GitHub Pages landing page<br>
+    ระบบจริงทำงานบน Google Apps Script Server
   </div>
 </div>
 
-<!-- ══ Modal: Print Options ═══════════════════════ -->
-<div id="printModal" class="modal-overlay">
-  <div class="glass-card" style="width:min(430px,95vw);padding:24px">
-    <div class="form-title">🖨️ พิมพ์ทะเบียนคุมการยืม</div>
-    <div id="printModalTitle" style="font-size:0.82rem;color:#666;margin-bottom:14px"></div>
-    <div class="form-group" style="margin-bottom:16px">
-      <label>ขอบเขตการพิมพ์</label>
-      <select id="printFilterSelect"
-              style="border-radius:13px;padding:9px 12px;border:1.5px solid #BBDEFB;background:white;font-family:var(--font)">
-        <option value="all">ทั้งหมด</option>
-        <option value="pending">เฉพาะที่ยังไม่คืน</option>
-      </select>
-    </div>
-    <div style="display:flex;gap:9px;justify-content:flex-end">
-      <button class="btn btn-outline" onclick="closePrintModal()">ยกเลิก</button>
-      <button class="btn btn-primary" onclick="doPrint()">🖨️ พิมพ์เลย</button>
-    </div>
-  </div>
-</div>
-
-<!-- ══ Footer ═════════════════════════════════════ -->
-<footer class="app-footer">
-  Copyright © 2026 ระบบยืม–คืนอุปกรณ์ออนไลน์ | กลุ่มงานบริหารงานทั่วไป โรงเรียนโซ่พิสัยพิทยาคม
+<footer>
+  Copyright © 2026 กลุ่มงานบริหารงานทั่วไป โรงเรียนโซ่พิสัยพิทยาคม
 </footer>
 
-<?!= include("JS"); ?>
+<script>
+  // Countdown timer
+  let count = 4;
+  const numEl  = document.getElementById("countNum");
+  const secEl  = document.getElementById("secText");
+  const GAS_URL = "https://script.google.com/macros/s/AKfycbxqmj2VQQNUAj1K8p73sIfkoO3iD1CZXVX1hFZghjVIeviS6BbuqtOMohhZq0P1Uqdhhg/exec";
+
+  const timer = setInterval(() => {
+    count--;
+    numEl.textContent = count;
+    secEl.textContent = count;
+    if (count <= 0) {
+      clearInterval(timer);
+      window.location.href = GAS_URL;
+    }
+  }, 1000);
+</script>
+
 </body>
 </html>
