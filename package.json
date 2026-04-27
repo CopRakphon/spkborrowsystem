@@ -1,0 +1,21 @@
+{
+  "name": "spk-borrow-system",
+  "version": "3.0.0",
+  "description": "ระบบยืม–คืนอุปกรณ์ โรงเรียนโซ่พิสัยพิทยาคม",
+  "scripts": {
+    "push":   "clasp push",
+    "pull":   "clasp pull",
+    "deploy": "clasp deploy --description \"Manual deploy $(date)\"",
+    "open":   "clasp open",
+    "logs":   "clasp logs --watch",
+    "status": "clasp deployments"
+  },
+  "devDependencies": {
+    "@google/clasp": "^2.4.2"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": ["google-apps-script", "clasp", "borrow-system", "thai-school"],
+  "license": "MIT"
+}
